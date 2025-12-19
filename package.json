@@ -10,12 +10,16 @@
   },
   "dependencies": {
     "next": "15.0.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "18.x",
+    "react-dom": "18.x",
     "@supabase/supabase-js": "latest",
     "lucide-react": "latest",
     "tailwindcss": "latest",
     "postcss": "latest",
-    "autoprefixer": "latest"
+    "autoprefixer": "latest",
+    "replicate": "latest",
+    "axios": "latest",
+    "clsx": "latest",
+    "tailwind-merge": "latest"
   }
 }
