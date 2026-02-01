@@ -1,41 +1,67 @@
-import Replicate from "replicate";
+/**
+ * Generate API Route
+ * Handles AI interior design generation using Replicate
+ */
+
+import Replicate from 'replicate';
+import { validateEnv, env } from '../../config/env';
+import { REPLICATE_CONFIG, STYLE_PROMPTS } from '../../config/constants';
+import { createErrorResponse, logError, AppError } from '../../utils/errors';
+import { isValidImageUrl } from '../../utils/validation';
+
+// Validate environment variables on startup
+validateEnv(true);
 
 const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
+  auth: env.replicate.apiToken,
 });
 
-const prompts = {
-  modern: "Modern interior design, clean lines, high-end materials, sophisticated lighting.",
-  minimalist: "Minimalist interior, functional furniture, monochromatic palette, airy space.",
-  scandi: "Scandinavian style, light wood, cozy textiles, natural light, hygge vibes.",
-  industrial: "Industrial interior, exposed brick, metal accents, raw wood, urban loft style.",
-  bohemian: "Bohemian interior, vibrant colors, eclectic decor, many plants, artistic atmosphere.",
-};
-
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { imageUrl, style } = req.body;
-  const prompt = prompts[style] || prompts.modern;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const output = await replicate.run(
-      "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
-      {
-        input: {
-          image: imageUrl,
-          prompt: `masterpiece, photorealistic, interior design magazine quality, ${prompt}`,
-          negative_prompt: "ugly, deformed, blurry, watermark, low quality, distorted",
-          num_inference_steps: 60,
-          guidance_scale: 7,
-          depth_strength: 0.8,
-          promax_strength: 0.8,
-        },
-      }
-    );
+    const { imageUrl, style } = req.body;
 
-    res.status(200).json({ output: output[0] });
+    // Validate input
+    if (!imageUrl || !isValidImageUrl(imageUrl)) {
+      throw new AppError('Invalid image URL', 400, 'INVALID_IMAGE_URL');
+    }
+
+    if (!style || !STYLE_PROMPTS[style]) {
+      throw new AppError('Invalid style', 400, 'INVALID_STYLE');
+    }
+
+    // Get style-specific prompt
+    const stylePrompt = STYLE_PROMPTS[style];
+
+    // Run AI generation
+    const output = await replicate.run(REPLICATE_CONFIG.MODEL, {
+      input: {
+        image: imageUrl,
+        prompt: `masterpiece, photorealistic, interior design magazine quality, ${stylePrompt}`,
+        negative_prompt: REPLICATE_CONFIG.NEGATIVE_PROMPT,
+        ...REPLICATE_CONFIG.DEFAULT_PARAMS,
+      },
+    });
+
+    // Validate output
+    if (!output || !Array.isArray(output) || output.length === 0) {
+      throw new AppError('No output generated', 500, 'NO_OUTPUT');
+    }
+
+    res.status(200).json({ 
+      output: output[0],
+      style,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    logError(error, 'generate API');
+    const errorResponse = createErrorResponse(error);
+    res.status(errorResponse.statusCode).json({
+      error: errorResponse.error,
+      code: errorResponse.code,
+    });
   }
 }

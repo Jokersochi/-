@@ -1,102 +1,117 @@
-import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Home Page - RoomGenius AI
+ * Main application page with modular architecture
+ */
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+import React from 'react';
+import { useImageGeneration } from '../hooks/useImageGeneration';
+import { usePayment } from '../hooks/usePayment';
+import FileUpload from '../components/FileUpload';
+import StyleSelector from '../components/StyleSelector';
+import GenerateButton from '../components/GenerateButton';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ErrorMessage from '../components/ErrorMessage';
+import ResultDisplay from '../components/ResultDisplay';
 
 export default function Home() {
-  const [file, setFile] = useState(null);
-  const [style, setStyle] = useState('modern');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  // Custom hooks for business logic
+  const {
+    file,
+    style,
+    loading,
+    uploadProgress,
+    result,
+    error,
+    handleFileSelect,
+    handleStyleChange,
+    generate,
+    clearError,
+  } = useImageGeneration();
 
-  const handleGenerate = async () => {
-    if (!file) return alert('Пожалуйста, загрузите фото');
-    setLoading(true);
-    setError(null);
+  const {
+    loading: paymentLoading,
+    error: paymentError,
+    initiatePayment,
+    clearError: clearPaymentError,
+  } = usePayment();
 
+  // Handle payment
+  const handlePayment = async () => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from('rooms')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('rooms')
-        .getPublicUrl(fileName);
-
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: publicUrl, style }),
+      await initiatePayment({
+        amount: 499,
+        description: 'RoomGenius AI - Дизайн интерьера',
+        metadata: {
+          style,
+          resultUrl: result,
+        },
       });
-
-      const resultData = await res.json();
-      if (resultData.error) throw new Error(resultData.error);
-      
-      setResult(resultData.output);
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      // Error is handled by the hook
+      console.error('Payment failed:', err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
-      <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
-      
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col items-center p-6 text-white">
+      {/* Header */}
+      <header className="w-full max-w-6xl mb-12 text-center">
+        <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          RoomGenius AI
+        </h1>
+        <p className="text-gray-400 text-lg">
+          Преобразите ваш интерьер с помощью искусственного интеллекта
+        </p>
+      </header>
+
+      {/* Main Form */}
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
-        <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
-        <input 
-          type="file" 
-          onChange={(e) => setFile(e.target.files[0])}
-          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" 
+        <FileUpload
+          onFileSelect={handleFileSelect}
+          disabled={loading}
         />
 
-        <label className="block text-sm font-medium mb-2">Выберите стиль</label>
-        <select 
-          value={style} 
-          onChange={(e) => setStyle(e.target.value)} 
-          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white"
-        >
-          <option value="modern">Современный</option>
-          <option value="minimalist">Минимализм</option>
-          <option value="scandi">Скандинавский</option>
-          <option value="industrial">Индустриальный</option>
-          <option value="bohemian">Богемный</option>
-        </select>
-
-        <button 
-          onClick={handleGenerate}
+        <StyleSelector
+          value={style}
+          onChange={handleStyleChange}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
-        >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
-        </button>
+        />
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        <GenerateButton
+          onClick={generate}
+          loading={loading}
+          disabled={!file}
+        />
+
+        {/* Error Messages */}
+        <ErrorMessage message={error} onDismiss={clearError} />
+        <ErrorMessage message={paymentError} onDismiss={clearPaymentError} />
       </div>
 
-      {result && (
-        <div className="mt-12 w-full max-w-4xl">
-          <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
-          <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
-          </div>
-          <div className="mt-6 flex justify-center">
-             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
-               Оплатить (Yookassa)
-             </button>
-          </div>
+      {/* Loading State */}
+      {loading && (
+        <div className="mt-12">
+          <LoadingSpinner
+            progress={uploadProgress}
+            message="Генерируем дизайн вашей комнаты..."
+          />
         </div>
       )}
+
+      {/* Result Display */}
+      <ResultDisplay
+        imageUrl={result}
+        onPayment={handlePayment}
+        paymentLoading={paymentLoading}
+      />
+
+      {/* Footer */}
+      <footer className="mt-auto pt-12 pb-6 text-center text-gray-500 text-sm">
+        <p>© 2026 RoomGenius AI. Все права защищены.</p>
+        <p className="mt-2">
+          Powered by AI • Replicate • Supabase
+        </p>
+      </footer>
     </div>
   );
 }
