@@ -1,41 +1,178 @@
 import Replicate from "replicate";
+import { STYLE_PROMPTS, GENERATION_SETTINGS } from "../../utils/constants";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-const prompts = {
-  modern: "Modern interior design, clean lines, high-end materials, sophisticated lighting.",
-  minimalist: "Minimalist interior, functional furniture, monochromatic palette, airy space.",
-  scandi: "Scandinavian style, light wood, cozy textiles, natural light, hygge vibes.",
-  industrial: "Industrial interior, exposed brick, metal accents, raw wood, urban loft style.",
-  bohemian: "Bohemian interior, vibrant colors, eclectic decor, many plants, artistic atmosphere.",
-};
+// Request validation
+function validateRequest(body) {
+  const errors = [];
+
+  if (!body.imageUrl) {
+    errors.push("imageUrl is required");
+  } else if (!isValidUrl(body.imageUrl)) {
+    errors.push("imageUrl must be a valid URL");
+  }
+
+  if (!body.style) {
+    errors.push("style is required");
+  } else if (!STYLE_PROMPTS[body.style]) {
+    errors.push(`Invalid style. Available styles: ${Object.keys(STYLE_PROMPTS).join(", ")}`);
+  }
+
+  return errors;
+}
+
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Rate limiting (simple in-memory implementation)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 10; // 10 requests per minute
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+
+  // Clean up old entries
+  for (const [key, value] of rateLimitMap.entries()) {
+    if (value.timestamp < windowStart) {
+      rateLimitMap.delete(key);
+    }
+  }
+
+  const current = rateLimitMap.get(ip) || { count: 0, timestamp: now };
+
+  if (current.timestamp < windowStart) {
+    current.count = 0;
+    current.timestamp = now;
+  }
+
+  current.count++;
+  rateLimitMap.set(ip, current);
+
+  return current.count <= RATE_LIMIT_MAX;
+}
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  // CORS headers
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  const { imageUrl, style } = req.body;
-  const prompt = prompts[style] || prompts.modern;
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Method not allowed",
+      allowedMethods: ["POST"],
+    });
+  }
+
+  // Rate limiting
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({
+      error: "Слишком много запросов. Пожалуйста, подождите минуту.",
+      retryAfter: 60,
+    });
+  }
+
+  // Validate request body
+  const validationErrors = validateRequest(req.body);
+  if (validationErrors.length > 0) {
+    return res.status(400).json({
+      error: "Validation failed",
+      details: validationErrors,
+    });
+  }
+
+  const { imageUrl, style, customPrompt } = req.body;
+  const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.modern;
+  const prompt = customPrompt || stylePrompt;
 
   try {
+    console.log(`[Generation] Starting for style: ${style}`);
+    
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
       {
         input: {
           image: imageUrl,
-          prompt: `masterpiece, photorealistic, interior design magazine quality, ${prompt}`,
-          negative_prompt: "ugly, deformed, blurry, watermark, low quality, distorted",
-          num_inference_steps: 60,
-          guidance_scale: 7,
-          depth_strength: 0.8,
-          promax_strength: 0.8,
+          prompt: `masterpiece, photorealistic, interior design magazine quality, professional photograph, ${prompt}`,
+          negative_prompt: "ugly, deformed, blurry, watermark, low quality, distorted, amateur, bad lighting, cartoon, illustration, painting",
+          num_inference_steps: GENERATION_SETTINGS.numInferenceSteps,
+          guidance_scale: GENERATION_SETTINGS.guidanceScale,
+          depth_strength: GENERATION_SETTINGS.depthStrength,
+          promax_strength: GENERATION_SETTINGS.promaxStrength,
         },
       }
     );
 
-    res.status(200).json({ output: output[0] });
+    console.log(`[Generation] Completed successfully`);
+
+    // Handle different output formats from Replicate
+    const resultUrl = Array.isArray(output) ? output[0] : output;
+
+    if (!resultUrl) {
+      throw new Error("No output received from generation model");
+    }
+
+    return res.status(200).json({
+      success: true,
+      output: resultUrl,
+      style,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(`[Generation] Error:`, error);
+
+    // Handle specific error types
+    if (error.message?.includes("NSFW")) {
+      return res.status(400).json({
+        error: "Изображение отклонено модерацией контента",
+        code: "CONTENT_MODERATION",
+      });
+    }
+
+    if (error.message?.includes("timeout")) {
+      return res.status(504).json({
+        error: "Превышено время ожидания. Пожалуйста, попробуйте снова.",
+        code: "TIMEOUT",
+      });
+    }
+
+    if (error.status === 401 || error.message?.includes("authentication")) {
+      return res.status(500).json({
+        error: "Ошибка конфигурации сервера",
+        code: "AUTH_ERROR",
+      });
+    }
+
+    return res.status(500).json({
+      error: "Ошибка при генерации дизайна. Пожалуйста, попробуйте снова.",
+      code: "GENERATION_ERROR",
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 }
+
+// API route config
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "1mb",
+    },
+  },
+};
