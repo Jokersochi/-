@@ -18,3 +18,7 @@ AI Interior Design Application built with Next.js, Supabase, and Replicate.
 - Generate designs: Modern, Minimalist, Scandinavian, Industrial, Bohemian.
 - Model: `rocketdigitalai/interior-design-sdxl`.
 - Payment: Yookassa.
+
+## Architecture
+See [TARGET_ARCHITECTURE.md](./TARGET_ARCHITECTURE.md) for a target platform
+architecture and evolution plan.
