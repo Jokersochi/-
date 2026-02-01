@@ -1,102 +1,292 @@
-import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+import React, { useState, useCallback } from 'react';
+import Head from 'next/head';
+import { Header, Footer } from '../components/layout';
+import { Card, FileUpload, Button } from '../components/ui';
+import { 
+  AuthModal, 
+  StyleSelector, 
+  GenerationResult, 
+  HistoryPanel, 
+  PaymentModal,
+  ProgressIndicator 
+} from '../components/features';
+import { useGeneration } from '../hooks/useGeneration';
+import { useAuth } from '../contexts/AuthContext';
+import { Sparkles, ArrowRight, Star, Shield, Zap } from 'lucide-react';
 
 export default function Home() {
+  // State
   const [file, setFile] = useState(null);
   const [style, setStyle] = useState('modern');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handleGenerate = async () => {
-    if (!file) return alert('Пожалуйста, загрузите фото');
-    setLoading(true);
-    setError(null);
+  // Hooks
+  const { generate, loading, error, result, progress, reset } = useGeneration();
+  const { isAuthenticated, credits } = useAuth();
 
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from('rooms')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('rooms')
-        .getPublicUrl(fileName);
-
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: publicUrl, style }),
-      });
-
-      const resultData = await res.json();
-      if (resultData.error) throw new Error(resultData.error);
-      
-      setResult(resultData.output);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  // Handle file selection
+  const handleFileSelect = useCallback((selectedFile) => {
+    setFile(selectedFile);
+    if (selectedFile) {
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+    } else {
+      setPreviewUrl(null);
     }
+  }, []);
+
+  // Handle generation
+  const handleGenerate = async () => {
+    if (!file) return;
+    
+    // Check if user needs to login or buy credits
+    if (!isAuthenticated) {
+      setShowAuth(true);
+      return;
+    }
+    
+    if (credits === 0) {
+      setShowPayment(true);
+      return;
+    }
+
+    await generate(file, style);
   };
 
+  // Handle new generation
+  const handleNewGeneration = () => {
+    reset();
+    setFile(null);
+    setPreviewUrl(null);
+  };
+
+  // Features data
+  const features = [
+    {
+      icon: Sparkles,
+      title: '8 стилей дизайна',
+      description: 'От современного минимализма до богемного шика',
+    },
+    {
+      icon: Zap,
+      title: 'Быстрая генерация',
+      description: 'Результат за 30-60 секунд',
+    },
+    {
+      icon: Star,
+      title: 'HD качество',
+      description: 'Профессиональные фотореалистичные изображения',
+    },
+    {
+      icon: Shield,
+      title: 'Безопасно',
+      description: 'Ваши фото защищены и удаляются автоматически',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
-      <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
-      
-      <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
-        <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
-        <input 
-          type="file" 
-          onChange={(e) => setFile(e.target.files[0])}
-          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" 
+    <>
+      <Head>
+        <title>RoomGenius AI - Дизайн интерьера с искусственным интеллектом</title>
+        <meta name="description" content="Преобразите свою комнату с помощью ИИ. Загрузите фото и получите профессиональный дизайн за секунды." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-black text-white">
+        <Header 
+          onShowAuth={() => setShowAuth(true)} 
+          onShowHistory={() => setShowHistory(true)}
         />
 
-        <label className="block text-sm font-medium mb-2">Выберите стиль</label>
-        <select 
-          value={style} 
-          onChange={(e) => setStyle(e.target.value)} 
-          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white"
-        >
-          <option value="modern">Современный</option>
-          <option value="minimalist">Минимализм</option>
-          <option value="scandi">Скандинавский</option>
-          <option value="industrial">Индустриальный</option>
-          <option value="bohemian">Богемный</option>
-        </select>
+        <main className="flex-1">
+          {/* Hero Section */}
+          {!result && !loading && (
+            <section className="py-12 px-6 text-center">
+              <div className="max-w-4xl mx-auto">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm mb-6">
+                  <Sparkles className="w-4 h-4" />
+                  Powered by AI
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                  Преобразите комнату с помощью ИИ
+                </h1>
+                <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+                  Загрузите фото вашей комнаты, выберите стиль — и получите профессиональный дизайн интерьера за секунды
+                </p>
+              </div>
+            </section>
+          )}
 
-        <button 
-          onClick={handleGenerate}
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
-        >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
-        </button>
+          {/* Main Content */}
+          <section className="py-8 px-6">
+            <div className="max-w-4xl mx-auto">
+              {/* Loading State */}
+              {loading && (
+                <Card className="p-12">
+                  <ProgressIndicator progress={progress} />
+                  <p className="text-center text-gray-400 mt-6">
+                    Пожалуйста, подождите. Создаём ваш уникальный дизайн...
+                  </p>
+                </Card>
+              )}
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+              {/* Result State */}
+              {result && !loading && (
+                <GenerationResult
+                  originalImage={previewUrl}
+                  generatedImage={result}
+                  style={style}
+                  onNewGeneration={handleNewGeneration}
+                  onPayment={() => setShowPayment(true)}
+                  isPaid={credits > 0 || credits === -1}
+                />
+              )}
+
+              {/* Upload Form */}
+              {!result && !loading && (
+                <Card className="p-8">
+                  <div className="space-y-8">
+                    {/* File Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-3">
+                        Загрузите фото комнаты
+                      </label>
+                      <FileUpload 
+                        onFileSelect={handleFileSelect}
+                        maxSize={10 * 1024 * 1024}
+                        accept="image/jpeg,image/png,image/webp"
+                      />
+                    </div>
+
+                    {/* Style Selector */}
+                    <StyleSelector 
+                      value={style} 
+                      onChange={setStyle}
+                      disabled={loading}
+                    />
+
+                    {/* Error Message */}
+                    {error && (
+                      <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400">
+                        {error}
+                      </div>
+                    )}
+
+                    {/* Generate Button */}
+                    <Button
+                      fullWidth
+                      size="lg"
+                      onClick={handleGenerate}
+                      disabled={!file || loading}
+                      icon={ArrowRight}
+                      iconPosition="right"
+                    >
+                      {!isAuthenticated 
+                        ? 'Войти и сгенерировать' 
+                        : credits === 0 
+                          ? 'Купить кредиты' 
+                          : 'Сгенерировать дизайн'
+                      }
+                    </Button>
+
+                    {/* Credits Info */}
+                    {isAuthenticated && (
+                      <p className="text-center text-sm text-gray-400">
+                        {credits === -1 
+                          ? 'У вас безлимитный доступ' 
+                          : `Осталось ${credits} генераций`
+                        }
+                        {credits >= 0 && credits < 3 && (
+                          <button 
+                            onClick={() => setShowPayment(true)}
+                            className="ml-2 text-blue-400 hover:text-blue-300"
+                          >
+                            Пополнить
+                          </button>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              )}
+            </div>
+          </section>
+
+          {/* Features Section */}
+          {!result && !loading && (
+            <section className="py-16 px-6">
+              <div className="max-w-6xl mx-auto">
+                <h2 className="text-2xl font-bold text-center mb-12">
+                  Почему RoomGenius?
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {features.map((feature, idx) => (
+                    <Card key={idx} hover className="text-center">
+                      <div className="inline-flex p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+                        <feature.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        {feature.description}
+                      </p>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* How It Works */}
+          {!result && !loading && (
+            <section className="py-16 px-6 bg-white/5">
+              <div className="max-w-4xl mx-auto text-center">
+                <h2 className="text-2xl font-bold mb-12">Как это работает</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold mb-4">
+                      1
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Загрузите фото</h3>
+                    <p className="text-gray-400 text-sm">
+                      Сфотографируйте вашу комнату или загрузите готовое фото
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-2xl font-bold mb-4">
+                      2
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Выберите стиль</h3>
+                    <p className="text-gray-400 text-sm">
+                      Современный, минимализм, скандинавский и другие
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-2xl font-bold mb-4">
+                      3
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Получите дизайн</h3>
+                    <p className="text-gray-400 text-sm">
+                      ИИ преобразит вашу комнату за считанные секунды
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </main>
+
+        <Footer />
+
+        {/* Modals */}
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+        <HistoryPanel isOpen={showHistory} onClose={() => setShowHistory(false)} />
+        <PaymentModal isOpen={showPayment} onClose={() => setShowPayment(false)} />
       </div>
-
-      {result && (
-        <div className="mt-12 w-full max-w-4xl">
-          <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
-          <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
-          </div>
-          <div className="mt-6 flex justify-center">
-             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
-               Оплатить (Yookassa)
-             </button>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
