@@ -1,56 +1,138 @@
-# Target Platform Architecture
+# Целевая архитектура платформы RoomGenius
 
-This document outlines a target architecture for the RoomGenius platform as it
-evolves from MVP to a scalable product.
+Документ описывает целевую архитектуру и эволюцию RoomGenius от MVP к
+масштабируемому продукту с контролем качества, стоимости и безопасности.
 
-## Goals
-- Fast end-to-end generation (upload to result in <= 2-5 minutes)
-- Reliable job tracking and retries
-- Secure handling of user uploads and outputs
-- Clear payment gating and auditability
-- Observability for latency, errors, and cost
+## Цели
+- Быстрая генерация: от загрузки до результата <= 2-5 минут.
+- Надежный трекинг задач, повторные попытки и идемпотентность.
+- Безопасная обработка пользовательских данных и файлов.
+- Прозрачное платежное окно и аудит операций.
+- Наблюдаемость по задержкам, ошибкам и стоимости.
 
-## Current MVP (as implemented)
-- Next.js UI and API routes
-- Supabase Storage for uploads
-- Replicate for image generation
-- Yookassa planned for payments
+## Текущее состояние (MVP)
+- Next.js UI и API routes.
+- Supabase Storage для загрузок.
+- Replicate для генерации.
+- Yookassa планируется для платежей.
 
-## Target Architecture Overview
-1. Client/Web (Next.js)
-2. API/Backend (Next.js API routes or separate service)
-3. Storage (Supabase Storage + Postgres metadata)
-4. Generation Worker (queue + Replicate)
-5. Payments (Yookassa)
-6. Observability (logs, metrics, tracing)
+## Целевая архитектура (компоненты)
+1. Клиент (Next.js, web)
+2. API/Backend (Next.js API routes или отдельный сервис)
+3. Auth (Supabase Auth или сторонний провайдер)
+4. Storage (Supabase Storage)
+5. База данных (Postgres)
+6. Очередь и воркеры (фоновые задания)
+7. Платежи (Yookassa)
+8. Наблюдаемость (логи, метрики, трассировки)
 
-## Data Flow (happy path)
-1. User uploads an image -> stored in Supabase Storage.
-2. Backend creates a job record in Postgres with status=queued.
-3. Worker calls Replicate with storage URL and prompt.
-4. Output image stored back to Storage; job status set to completed.
-5. UI polls or subscribes to job updates and renders the result.
-6. Payment captured before or after generation depending on policy.
+## Диаграмма компонентов (упрощенно)
+```
+[Web/Client]
+     |
+     v
+[API / Backend] -----> [Postgres]
+     |   \                |
+     |    \               v
+     v     \          [Audit/Analytics]
+[Storage]  \
+     |      v
+     |   [Queue] ---> [Worker] ---> [Replicate]
+     |                               |
+     v                               v
+[Signed URLs]                   [Storage(Output)]
+```
 
-## Key Design Decisions
-- Async generation jobs to avoid API timeouts.
-- Signed URLs for storage access; never expose raw service keys.
-- Store prompts, styles, and output metadata in Postgres for auditing and
-  analytics.
-- Rate limiting per user to protect costs.
+## Диаграмма потока данных (happy path)
+```
+1) Upload -> Storage
+2) Create Job -> Postgres (status=queued)
+3) Queue -> Worker
+4) Worker -> Replicate -> Output URL
+5) Save Output -> Storage + Postgres (status=completed)
+6) UI polls/subscribes -> show result
+7) Payment capture (policy-based)
+```
 
-## Scalability and Reliability
-- Queue-backed workers with concurrency control.
-- Retry transient Replicate failures with exponential backoff.
-- Fallbacks and user-friendly error states in the UI.
+## Ключевые решения
+- Генерация асинхронная, чтобы избежать таймаутов HTTP.
+- Доступ к Storage через signed URLs; секретные ключи не уходят в клиент.
+- Промпты, стили, параметры модели и ссылки на файлы сохраняются в Postgres.
+- Rate limiting и квоты на пользователя для контроля затрат.
 
-## Security and Compliance
-- Validate file type and size client-side and server-side.
-- Automatic cleanup policy for uploads and outputs (TTL).
-- Least-privilege keys for storage buckets.
+## База данных (рекомендованная схема)
+Минимальный набор таблиц для устойчивой работы:
 
-## Next Steps
-- Add job table and status polling.
-- Move generation to background worker.
-- Add payment gating and webhooks.
-- Add centralized logging and metrics dashboard.
+- `users`
+  - id, email, created_at, role
+- `projects` (опционально, если один пользователь ведет несколько проектов)
+  - id, user_id, title, created_at
+- `jobs`
+  - id, user_id, project_id, status, style, prompt,
+    input_storage_path, output_storage_path,
+    replicate_job_id, error_message,
+    created_at, updated_at, completed_at
+- `payments`
+  - id, user_id, job_id, provider, status,
+    amount, currency, provider_payment_id,
+    created_at, updated_at
+- `audit_log`
+  - id, user_id, action, payload_json, created_at
+- `rate_limits`
+  - user_id, period, limit, used, reset_at
+
+Индексы: по `jobs.user_id`, `jobs.status`, `payments.job_id`, `payments.status`.
+
+## Очереди и воркеры
+Цель: отделить генерацию от запросов клиента, управлять параллелизмом и
+повторными попытками.
+
+Варианты реализации:
+- Postgres-очередь (pg-boss, simple LISTEN/NOTIFY) как стартовый вариант.
+- Redis + BullMQ для высокой пропускной способности.
+- Управляемые очереди (SQS) при росте нагрузки.
+
+Критические требования:
+- Идемпотентность: один job не должен генерироваться дважды.
+- Ретрай политики: экспоненциальная задержка, max_attempts, DLQ.
+- Тайм-ауты и cancelation для долгих задач.
+
+## Безопасность
+- Валидация файла по размеру и MIME на сервере и клиенте.
+- Разделение бакетов: `uploads/` и `outputs/` с разными правами.
+- Подписанные URL с коротким TTL для доступа к объектам.
+- RLS-политики для Postgres (доступ только к своим job).
+- Защита вебхуков Yookassa (проверка подписи).
+- Ограничение токенов и ключей по принципу least privilege.
+- Политика очистки: TTL для временных файлов и устаревших результатов.
+
+## Наблюдаемость
+- Метрики: время загрузки, время генерации, success rate, cost/job.
+- Логи: job_id, user_id, ошибки внешних API.
+- Трассировки: API -> worker -> Replicate -> storage.
+
+## Платежный сценарий (варианты)
+1) Pre-pay: пользователь платит до генерации.
+2) Post-pay: платит после превью/водяного знака.
+3) Hybrid: ограниченный free-tier + оплата за HD.
+
+## Поэтапный план внедрения
+**Этап 0. Стабилизация MVP**
+- Ввести таблицу `jobs` и статусную модель.
+- UI: отображение очереди и состояний.
+
+**Этап 1. Асинхронная генерация**
+- Очередь + воркер, перенос генерации из API.
+- Ретрай и логирование ошибок.
+
+**Этап 2. Платежи**
+- Интеграция Yookassa, вебхуки, привязка payment -> job.
+- Политика доступа к результату (до/после оплаты).
+
+**Этап 3. Наблюдаемость и контроль затрат**
+- Метрики, алерты, лимиты на пользователя.
+- Квоты, free-tier, защита от злоупотреблений.
+
+**Этап 4. Масштабирование**
+- Горизонтальное масштабирование воркеров.
+- Кэширование, оптимизация промптов и пайплайна.
