@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+import Link from 'next/link';
+import { getSupabaseClient } from '../lib/supabase';
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -19,6 +15,9 @@ export default function Home() {
     setError(null);
 
     try {
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase не настроен: проверьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const { data, error: uploadError } = await supabase.storage
@@ -51,6 +50,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
       <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
+
+      <div className="mb-8 w-full max-w-md">
+        <Link
+          href="/architecture"
+          className="block rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-sm text-white/90 hover:bg-white/15"
+        >
+          <div className="font-semibold">Целевая архитектура платформы</div>
+          <div className="mt-1 text-xs text-white/70">
+            Смотреть документ с C4‑диаграммами, потоками данных и NFR
+          </div>
+        </Link>
+      </div>
       
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
         <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>

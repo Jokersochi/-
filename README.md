@@ -2,6 +2,11 @@
 
 AI Interior Design Application built with Next.js, Supabase, and Replicate.
 
+## Target Platform Architecture
+
+- **Документ**: `docs/target-platform-architecture.md`
+- **UI-страница**: `pages/architecture.js` (роут `/architecture`)
+
 ## Setup Instructions
 
 1. **Install dependencies**: `npm install`
