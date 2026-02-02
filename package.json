@@ -1,8 +1,8 @@
 {
   "name": "roomgenius-ai",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "AI-powered interior design platform",
+  "description": "World-class AI-powered interior design platform",
   "author": "RoomGenius AI Team",
   "scripts": {
     "dev": "next dev",
@@ -28,7 +28,15 @@
     "replicate": "latest",
     "axios": "latest",
     "clsx": "latest",
-    "tailwind-merge": "latest"
+    "tailwind-merge": "latest",
+    "jszip": "^3.10.1",
+    "file-saver": "^2.0.5",
+    "jspdf": "^2.5.1",
+    "react-hot-toast": "^2.4.1",
+    "framer-motion": "^10.16.4",
+    "zustand": "^4.4.6",
+    "date-fns": "^2.30.0",
+    "react-icons": "^4.12.0"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
@@ -38,6 +46,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.1.0",
     "eslint": "^8.54.0",
-    "eslint-config-next": "15.0.0"
+    "eslint-config-next": "15.0.0",
+    "@types/react": "^18.2.42",
+    "@types/node": "^20.10.0"
   }
 }
