@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { getSupabaseClient } from '../lib/supabase';
 
@@ -7,12 +7,23 @@ export default function Home() {
   const [style, setStyle] = useState('modern');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [jobId, setJobId] = useState(null);
+  const [jobStatus, setJobStatus] = useState(null);
   const [error, setError] = useState(null);
+  const pollRef = useRef(null);
 
   const handleGenerate = async () => {
     if (!file) return alert('Пожалуйста, загрузите фото');
     setLoading(true);
     setError(null);
+    setResult(null);
+    setJobId(null);
+    setJobStatus(null);
+
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
 
     try {
       const supabase = getSupabaseClient();
@@ -30,7 +41,7 @@ export default function Home() {
         .from('rooms')
         .getPublicUrl(fileName);
 
-      const res = await fetch('/api/generate', {
+      const res = await fetch('/api/generations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl: publicUrl, style }),
@@ -38,12 +49,43 @@ export default function Home() {
 
       const resultData = await res.json();
       if (resultData.error) throw new Error(resultData.error);
-      
-      setResult(resultData.output);
+
+      const newJobId = resultData.job_id;
+      setJobId(newJobId);
+      setJobStatus(resultData.status || 'running');
+
+      // Poll job status until completion
+      pollRef.current = setInterval(async () => {
+        try {
+          const r = await fetch(`/api/generations/${newJobId}`);
+          const d = await r.json();
+          if (d?.error) throw new Error(d.error);
+
+          const job = d?.job;
+          if (!job) return;
+          setJobStatus(job.status);
+
+          if (job.status === 'succeeded' && job.output_image_url) {
+            setResult(job.output_image_url);
+            clearInterval(pollRef.current);
+            pollRef.current = null;
+            setLoading(false);
+          }
+
+          if (job.status === 'failed') {
+            clearInterval(pollRef.current);
+            pollRef.current = null;
+            setLoading(false);
+            throw new Error(job.error || 'Генерация завершилась ошибкой');
+          }
+        } catch (e) {
+          setError(e.message);
+        }
+      }, 1500);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      // loading will be stopped by poller on succeed/fail
     }
   };
 
@@ -91,6 +133,13 @@ export default function Home() {
         >
           {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
         </button>
+
+        {jobId && (
+          <p className="mt-4 text-xs text-white/70">
+            Job: <code className="rounded bg-white/10 px-2 py-1">{jobId}</code>{' '}
+            {jobStatus ? <span className="ml-2">Статус: {jobStatus}</span> : null}
+          </p>
+        )}
 
         {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>

@@ -10,10 +10,12 @@ AI Interior Design Application built with Next.js, Supabase, and Replicate.
 ## Setup Instructions
 
 1. **Install dependencies**: `npm install`
-2. **Configure environment variables**: Create a `.env.local` file with:
+2. **Configure environment variables**: Create a `.env.local` file (see `.env.example`) with:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-side only, required for full-stack jobs)
    - `REPLICATE_API_TOKEN`
+   - `REPLICATE_WEBHOOK_SECRET` (optional but recommended)
    - `YOOKASSA_SHOP_ID`
    - `YOOKASSA_SECRET_KEY`
 3. **Run**: `npm run dev`
