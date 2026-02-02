@@ -136,3 +136,193 @@
 **Этап 4. Масштабирование**
 - Горизонтальное масштабирование воркеров.
 - Кэширование, оптимизация промптов и пайплайна.
+
+## Full-stack архитектура (детально)
+Ниже приведена полная картина стека от клиента до инфраструктуры.
+
+### Уровни и ответственность
+- Frontend (Web):
+  - Next.js + React, Tailwind UI, клиентская валидация файлов.
+  - Загрузка файлов через signed URL, трекинг статусов job.
+  - Экран истории генераций и платежей.
+- Backend/API:
+  - Создание job, выдача signed URLs, управление статусами.
+  - Бизнес-логика оплаты и доступ к результатам.
+  - Rate limit, валидация, авторизация.
+- Async/Workers:
+  - Воркер читает job из очереди, вызывает Replicate.
+  - Сохраняет результат в Storage, обновляет Postgres.
+  - Идемпотентные ретраи и обработка тайм-аутов.
+- Data:
+  - Postgres: users, jobs, payments, audit_log.
+  - Storage: uploads/ и outputs/ с ограниченными правами.
+- Payments:
+  - Создание платежа, подтверждение по вебхукам.
+  - Привязка к job и политика доступа к результатам.
+- Observability:
+  - Логи с job_id и user_id.
+  - Метрики latency/error rate/cost.
+- CI/CD и инфраструктура:
+  - Автоматический деплой, миграции, секреты, мониторинг.
+
+### Диаграмма full-stack (mermaid)
+```mermaid
+flowchart LR
+  subgraph Client
+    Web[Next.js Web]
+  end
+  subgraph Edge
+    CDN[CDN/Edge Cache]
+  end
+  subgraph Backend
+    API[API / Next.js]
+    Auth[Auth]
+    Queue[Queue]
+    Worker[Worker]
+  end
+  subgraph Data
+    DB[(Postgres)]
+    Store[(Storage)]
+  end
+  subgraph AI
+    Rep[Replicate]
+  end
+  subgraph Payments
+    Pay[Yookassa]
+  end
+  Web --> CDN --> API
+  API --> Auth
+  API --> DB
+  API --> Store
+  API --> Queue
+  Queue --> Worker --> Rep --> Store
+  API --> Pay
+  Pay --> API
+```
+
+## Рекомендованный стек реализации (вариант по умолчанию)
+Этот стек совместим с текущим MVP и легко масштабируется.
+
+- Web: Next.js 15 + React 18, Tailwind CSS.
+- API: Next.js API routes (позже можно вынести в отдельный сервис).
+- Auth: Supabase Auth (email/OTP/social).
+- DB: Supabase Postgres.
+- Storage: Supabase Storage.
+- Queue: Redis + BullMQ (или pg-boss как старт).
+- Workers: Node.js worker (Docker), масштабируемые инстансы.
+- AI: Replicate API.
+- Payments: Yookassa + webhook обработчик.
+- Observability: Sentry (errors) + Prometheus/Grafana (metrics).
+- Hosting:
+  - Web/API: Vercel или Fly.io.
+  - Worker: Render/Fly.io/AWS ECS.
+
+## Контракты API (черновик)
+Эндпоинты для стабильной full-stack реализации.
+
+### POST /api/uploads/sign
+Выдает signed URL для загрузки.
+Request:
+```json
+{ "fileName": "room.jpg", "contentType": "image/jpeg" }
+```
+Response:
+```json
+{ "uploadUrl": "https://...", "path": "uploads/uuid.jpg" }
+```
+
+### POST /api/jobs
+Создает задачу генерации.
+Request:
+```json
+{ "inputPath": "uploads/uuid.jpg", "style": "modern" }
+```
+Response:
+```json
+{ "jobId": "uuid", "status": "queued" }
+```
+
+### GET /api/jobs/:id
+Получение статуса и результата.
+Response:
+```json
+{
+  "jobId": "uuid",
+  "status": "completed",
+  "outputUrl": "https://...",
+  "error": null
+}
+```
+
+### GET /api/jobs?status=queued
+Список задач пользователя.
+
+### POST /api/payments
+Создает платеж.
+Request:
+```json
+{ "jobId": "uuid", "amount": 29900, "currency": "RUB" }
+```
+Response:
+```json
+{ "paymentId": "uuid", "confirmUrl": "https://..." }
+```
+
+### POST /api/webhooks/yookassa
+Вебхук подтверждения платежа (валидация подписи обязательна).
+
+## DDL (пример PostgreSQL)
+```sql
+create type job_status as enum ('queued','processing','completed','failed','cancelled');
+create type payment_status as enum ('pending','succeeded','failed','refunded');
+
+create table jobs (
+  id uuid primary key,
+  user_id uuid not null,
+  status job_status not null default 'queued',
+  style text not null,
+  prompt text not null,
+  input_storage_path text not null,
+  output_storage_path text,
+  replicate_job_id text,
+  error_message text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  completed_at timestamptz
+);
+
+create table payments (
+  id uuid primary key,
+  user_id uuid not null,
+  job_id uuid not null references jobs(id),
+  provider text not null,
+  provider_payment_id text,
+  status payment_status not null default 'pending',
+  amount integer not null,
+  currency text not null default 'RUB',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table audit_log (
+  id uuid primary key,
+  user_id uuid,
+  action text not null,
+  payload_json jsonb,
+  created_at timestamptz not null default now()
+);
+```
+
+## CI/CD (минимальный план)
+- Lint + build на каждый PR.
+- Проверка миграций и схемы БД.
+- Автодеплой в staging, затем manual approve -> production.
+- Секреты хранятся в secret manager.
+
+## Инфраструктура и секреты
+- Все ключи только в серверной среде (never in client).
+- Переменные окружения:
+  - REPLICATE_API_TOKEN
+  - SUPABASE_SERVICE_ROLE_KEY
+  - YOOKASSA_SECRET_KEY
+- Обязательны rate limits и quotas.
