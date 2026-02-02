@@ -326,3 +326,98 @@ create table audit_log (
   - SUPABASE_SERVICE_ROLE_KEY
   - YOOKASSA_SECRET_KEY
 - Обязательны rate limits и quotas.
+
+## RLS-политики Supabase (пример)
+Рекомендуется включить RLS по умолчанию и явно описывать доступ.
+
+```sql
+alter table jobs enable row level security;
+alter table payments enable row level security;
+alter table audit_log enable row level security;
+
+create policy "jobs_select_own" on jobs
+  for select using (auth.uid() = user_id);
+
+create policy "jobs_insert_own" on jobs
+  for insert with check (auth.uid() = user_id);
+
+create policy "jobs_update_own" on jobs
+  for update using (auth.uid() = user_id);
+
+create policy "payments_select_own" on payments
+  for select using (auth.uid() = user_id);
+
+create policy "payments_insert_own" on payments
+  for insert with check (auth.uid() = user_id);
+```
+
+Storage policies (Supabase Storage):
+- `uploads/*` доступ на запись только для аутентифицированных пользователей.
+- `outputs/*` доступ на чтение только владельцу job или по signed URL.
+- Public buckets не использовать для чувствительных данных.
+
+## Миграции и версия схемы
+Минимально рекомендуемый процесс:
+- Все изменения схемы в `supabase/migrations/*.sql`.
+- Миграции именуются timestamp префиксом (YYYYMMDDHHMMSS).
+- На CI: проверка, что миграции применимы и схема валидна.
+- На deploy: `supabase db push` или применение SQL миграций.
+
+Версионирование схемы:
+- В Postgres хранить таблицу `schema_migrations` (или использовать встроенный
+  механизм Supabase) для контроля примененных миграций.
+- В релизных заметках фиксировать version id.
+
+## SLO/SLI и надежность
+Рекомендуемые SLO (начальные):
+- Доступность API: 99.5% в месяц.
+- Время генерации: P50 <= 90s, P95 <= 240s.
+- Успешность генераций: >= 97% (не включая invalid input).
+
+Ключевые SLI:
+- latency_generate_p50/p95
+- error_rate (5xx + failed jobs)
+- queue_wait_time
+- cost_per_job
+- payment_success_rate
+
+## Cost model (упрощенно)
+Пример расчета стоимости на 1 job:
+```
+cost_job = cost_replicate + cost_storage + cost_egress + infra_overhead
+```
+Где:
+- cost_replicate: цена за 1 запуск модели.
+- cost_storage: хранение input/output (MB * price/GB/month).
+- cost_egress: выдача результатов пользователю.
+- infra_overhead: worker + API + observability.
+
+Для контроля бюджета:
+- лимиты по пользователям и тарифам,
+- ограничение параллельных job,
+- авто-очистка outputs через TTL.
+
+## Спецификация worker pipeline
+Рекомендуемая логика исполнения job:
+1. Worker получает job из очереди.
+2. Блокирует job: `SELECT ... FOR UPDATE SKIP LOCKED`.
+3. Меняет статус на `processing`, пишет `started_at`.
+4. Валидирует input (существует ли файл).
+5. Запускает Replicate (с тайм-аутом).
+6. Сохраняет output в Storage.
+7. Обновляет job: `completed`, `completed_at`, `output_storage_path`.
+8. При ошибке: статус `failed`, `error_message`, счетчик retry.
+
+Повторные попытки:
+- max_attempts = 3..5.
+- экспоненциальная задержка + jitter.
+- DLQ для неуспешных задач.
+
+Идемпотентность:
+- один job = один результат,
+- повторный запуск не создает дубликат output,
+- проверка `status` перед обработкой.
+
+Отмена задач:
+- `cancelled` статус,
+- worker проверяет `cancelled` перед запуском и после долгих шагов.
