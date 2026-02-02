@@ -1,0 +1,91 @@
+{
+  "common": {
+    "appName": "RoomGenius AI",
+    "tagline": "Transform your interior with artificial intelligence",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "collections": "Collections",
+    "favorites": "Favorites",
+    "pricing": "Pricing",
+    "admin": "Admin",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signUp": "Sign Up"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signInWithGoogle": "Sign in with Google",
+    "signUpSuccess": "Registration successful! Check your email for confirmation."
+  },
+  "generation": {
+    "uploadPhoto": "Upload room photo",
+    "selectStyle": "Select style",
+    "generate": "Generate design",
+    "generating": "Generating...",
+    "result": "Generation result",
+    "download": "Download image",
+    "addToCollection": "Add to collection",
+    "addToFavorites": "Add to favorites"
+  },
+  "styles": {
+    "modern": "Modern",
+    "minimalist": "Minimalist",
+    "scandi": "Scandinavian",
+    "industrial": "Industrial",
+    "bohemian": "Bohemian"
+  },
+  "dashboard": {
+    "title": "My Dashboard",
+    "credits": "Credits",
+    "generations": "Generations",
+    "collections": "Collections",
+    "favorites": "Favorites",
+    "noGenerations": "You don't have any generations yet",
+    "createFirst": "Create your first design"
+  },
+  "collections": {
+    "title": "My Collections",
+    "create": "Create collection",
+    "name": "Name",
+    "description": "Description",
+    "public": "Public",
+    "items": "items",
+    "noCollections": "You don't have any collections yet",
+    "createFirst": "Create your first collection"
+  },
+  "payment": {
+    "title": "Payment",
+    "buyCredits": "Buy credits",
+    "selectPlan": "Select plan",
+    "pay": "Pay"
+  },
+  "errors": {
+    "noFile": "Please upload a room photo",
+    "fileTooLarge": "File too large. Maximum size: 10MB",
+    "invalidFileType": "Invalid file type. Supported: JPG, PNG, WEBP",
+    "uploadFailed": "Failed to upload file",
+    "generationFailed": "Failed to generate design",
+    "networkError": "Network error. Check your internet connection",
+    "unknownError": "An unknown error occurred",
+    "insufficientCredits": "Insufficient credits"
+  }
+}

@@ -6,14 +6,18 @@
 import React from 'react';
 import { useImageGeneration } from '../hooks/useImageGeneration';
 import { usePayment } from '../hooks/usePayment';
+import { useTranslation } from '../hooks/useTranslation';
 import FileUpload from '../components/FileUpload';
 import StyleSelector from '../components/StyleSelector';
 import GenerateButton from '../components/GenerateButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import ResultDisplay from '../components/ResultDisplay';
+import SEO from '../components/SEO';
 
 export default function Home() {
+  const { t, locale, changeLocale } = useTranslation();
+  
   // Custom hooks for business logic
   const {
     file,
@@ -53,16 +57,37 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col items-center p-6 text-white">
-      {/* Header */}
-      <header className="w-full max-w-6xl mb-12 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          RoomGenius AI
-        </h1>
-        <p className="text-gray-400 text-lg">
-          Преобразите ваш интерьер с помощью искусственного интеллекта
-        </p>
-      </header>
+    <>
+      <SEO
+        title={t('common.appName') + ' - AI Interior Design Generator'}
+        description={t('common.tagline')}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col items-center p-6 text-white">
+        {/* Header */}
+        <header className="w-full max-w-6xl mb-12 text-center">
+          <div className="flex justify-end mb-4 space-x-2">
+            <button
+              onClick={() => changeLocale('ru')}
+              className={`px-3 py-1 rounded ${locale === 'ru' ? 'bg-blue-600' : 'bg-gray-800'}`}
+            >
+              RU
+            </button>
+            <button
+              onClick={() => changeLocale('en')}
+              className={`px-3 py-1 rounded ${locale === 'en' ? 'bg-blue-600' : 'bg-gray-800'}`}
+            >
+              EN
+            </button>
+          </div>
+          
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            {t('common.appName')}
+          </h1>
+          <p className="text-gray-400 text-lg">
+            {t('common.tagline')}
+          </p>
+        </header>
 
       {/* Main Form */}
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
@@ -105,13 +130,14 @@ export default function Home() {
         paymentLoading={paymentLoading}
       />
 
-      {/* Footer */}
-      <footer className="mt-auto pt-12 pb-6 text-center text-gray-500 text-sm">
-        <p>© 2026 RoomGenius AI. Все права защищены.</p>
-        <p className="mt-2">
-          Powered by AI • Replicate • Supabase
-        </p>
-      </footer>
-    </div>
+        {/* Footer */}
+        <footer className="mt-auto pt-12 pb-6 text-center text-gray-500 text-sm">
+          <p>© 2026 RoomGenius AI. Все права защищены.</p>
+          <p className="mt-2">
+            Powered by AI • Replicate • Supabase
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }

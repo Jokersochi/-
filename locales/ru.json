@@ -1,0 +1,91 @@
+{
+  "common": {
+    "appName": "RoomGenius AI",
+    "tagline": "Преобразите ваш интерьер с помощью искусственного интеллекта",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "back": "Назад",
+    "next": "Далее"
+  },
+  "nav": {
+    "home": "Главная",
+    "dashboard": "Дашборд",
+    "collections": "Коллекции",
+    "favorites": "Избранное",
+    "pricing": "Тарифы",
+    "admin": "Админ",
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "signUp": "Регистрация"
+  },
+  "auth": {
+    "signIn": "Вход",
+    "signUp": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "name": "Имя",
+    "forgotPassword": "Забыли пароль?",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "signInWithGoogle": "Войти через Google",
+    "signUpSuccess": "Регистрация успешна! Проверьте email для подтверждения."
+  },
+  "generation": {
+    "uploadPhoto": "Загрузите фото комнаты",
+    "selectStyle": "Выберите стиль",
+    "generate": "Сгенерировать дизайн",
+    "generating": "Генерация...",
+    "result": "Результат генерации",
+    "download": "Скачать изображение",
+    "addToCollection": "Добавить в коллекцию",
+    "addToFavorites": "Добавить в избранное"
+  },
+  "styles": {
+    "modern": "Современный",
+    "minimalist": "Минимализм",
+    "scandi": "Скандинавский",
+    "industrial": "Индустриальный",
+    "bohemian": "Богемный"
+  },
+  "dashboard": {
+    "title": "Мой дашборд",
+    "credits": "Кредиты",
+    "generations": "Генерации",
+    "collections": "Коллекции",
+    "favorites": "Избранное",
+    "noGenerations": "У вас пока нет генераций",
+    "createFirst": "Создать первый дизайн"
+  },
+  "collections": {
+    "title": "Мои коллекции",
+    "create": "Создать коллекцию",
+    "name": "Название",
+    "description": "Описание",
+    "public": "Публичная",
+    "items": "элементов",
+    "noCollections": "У вас пока нет коллекций",
+    "createFirst": "Создать первую коллекцию"
+  },
+  "payment": {
+    "title": "Оплата",
+    "buyCredits": "Купить кредиты",
+    "selectPlan": "Выберите план",
+    "pay": "Оплатить"
+  },
+  "errors": {
+    "noFile": "Пожалуйста, загрузите фото комнаты",
+    "fileTooLarge": "Файл слишком большой. Максимальный размер: 10MB",
+    "invalidFileType": "Неверный тип файла. Поддерживаются: JPG, PNG, WEBP",
+    "uploadFailed": "Не удалось загрузить файл",
+    "generationFailed": "Не удалось сгенерировать дизайн",
+    "networkError": "Ошибка сети. Проверьте подключение к интернету",
+    "unknownError": "Произошла неизвестная ошибка",
+    "insufficientCredits": "Недостаточно кредитов"
+  }
+}
