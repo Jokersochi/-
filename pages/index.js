@@ -1,23 +1,27 @@
 import React, { useState, useCallback } from 'react';
-import Head from 'next/head';
 import { Header, Footer } from '../components/layout';
 import { Card, FileUpload, Button } from '../components/ui';
+import { SEO } from '../components/SEO';
 import { 
   AuthModal, 
   StyleSelector, 
   GenerationResult, 
   HistoryPanel, 
   PaymentModal,
-  ProgressIndicator 
+  ProgressIndicator,
+  AdvancedOptions
 } from '../components/features';
 import { useGeneration } from '../hooks/useGeneration';
 import { useAuth } from '../contexts/AuthContext';
-import { Sparkles, ArrowRight, Star, Shield, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react';
 
 export default function Home() {
   // State
   const [file, setFile] = useState(null);
   const [style, setStyle] = useState('modern');
+  const [roomType, setRoomType] = useState('living');
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [strength, setStrength] = useState(0.8);
   const [showAuth, setShowAuth] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -52,7 +56,7 @@ export default function Home() {
       return;
     }
 
-    await generate(file, style);
+    await generate(file, style, { roomType, customPrompt, strength });
   };
 
   // Handle new generation
@@ -60,6 +64,7 @@ export default function Home() {
     reset();
     setFile(null);
     setPreviewUrl(null);
+    setCustomPrompt('');
   };
 
   // Features data
@@ -84,16 +89,20 @@ export default function Home() {
       title: 'Безопасно',
       description: 'Ваши фото защищены и удаляются автоматически',
     },
+    {
+      icon: Users,
+      title: '50,000+ пользователей',
+      description: 'Нам доверяют дизайнеры по всему миру',
+    },
   ];
 
   return (
     <>
-      <Head>
-        <title>RoomGenius AI - Дизайн интерьера с искусственным интеллектом</title>
-        <meta name="description" content="Преобразите свою комнату с помощью ИИ. Загрузите фото и получите профессиональный дизайн за секунды." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SEO 
+        title="Дизайн интерьера с искусственным интеллектом"
+        description="Преобразите свою комнату с помощью ИИ. Загрузите фото и получите профессиональный дизайн за секунды. 8 стилей дизайна, HD качество."
+        url="/"
+      />
 
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-black text-white">
         <Header 
@@ -165,6 +174,17 @@ export default function Home() {
                     <StyleSelector 
                       value={style} 
                       onChange={setStyle}
+                      disabled={loading}
+                    />
+
+                    {/* Advanced Options */}
+                    <AdvancedOptions
+                      roomType={roomType}
+                      onRoomTypeChange={setRoomType}
+                      customPrompt={customPrompt}
+                      onCustomPromptChange={setCustomPrompt}
+                      strength={strength}
+                      onStrengthChange={setStrength}
                       disabled={loading}
                     />
 

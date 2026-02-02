@@ -1,0 +1,130 @@
+{
+  "app": {
+    "name": "RoomGenius AI",
+    "tagline": "Дизайн интерьера с искусственным интеллектом",
+    "description": "Преобразите свою комнату с помощью ИИ"
+  },
+  "nav": {
+    "home": "Главная",
+    "gallery": "Галерея",
+    "pricing": "Тарифы",
+    "about": "О нас",
+    "login": "Войти",
+    "register": "Регистрация",
+    "dashboard": "Личный кабинет",
+    "admin": "Админ панель",
+    "logout": "Выйти"
+  },
+  "auth": {
+    "login": "Вход",
+    "register": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "forgotPassword": "Забыли пароль?",
+    "resetPassword": "Сбросить пароль",
+    "orContinueWith": "Или продолжить с",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "signUp": "Зарегистрироваться",
+    "signIn": "Войти"
+  },
+  "generation": {
+    "title": "Создать дизайн",
+    "uploadPhoto": "Загрузите фото комнаты",
+    "selectStyle": "Выберите стиль",
+    "selectRoomType": "Тип комнаты",
+    "customPrompt": "Дополнительные пожелания",
+    "generate": "Сгенерировать",
+    "generating": "Генерация...",
+    "result": "Результат",
+    "download": "Скачать",
+    "share": "Поделиться",
+    "compare": "Сравнить",
+    "newGeneration": "Новая генерация",
+    "saveToGallery": "Сохранить в галерею"
+  },
+  "styles": {
+    "modern": "Современный",
+    "minimalist": "Минимализм",
+    "scandi": "Скандинавский",
+    "industrial": "Индустриальный",
+    "bohemian": "Богемный",
+    "classic": "Классический",
+    "japandi": "Джапанди",
+    "loft": "Лофт"
+  },
+  "rooms": {
+    "living": "Гостиная",
+    "bedroom": "Спальня",
+    "kitchen": "Кухня",
+    "bathroom": "Ванная",
+    "office": "Кабинет",
+    "kids": "Детская",
+    "dining": "Столовая",
+    "hallway": "Прихожая"
+  },
+  "pricing": {
+    "title": "Тарифы",
+    "subtitle": "Выберите подходящий план",
+    "free": "Бесплатно",
+    "popular": "Популярный",
+    "perMonth": "/месяц",
+    "oneTime": "Единоразово",
+    "features": "Возможности",
+    "selectPlan": "Выбрать",
+    "currentPlan": "Текущий план"
+  },
+  "dashboard": {
+    "title": "Личный кабинет",
+    "overview": "Обзор",
+    "history": "История",
+    "settings": "Настройки",
+    "subscription": "Подписка",
+    "referrals": "Рефералы",
+    "credits": "Кредиты",
+    "creditsLeft": "осталось кредитов"
+  },
+  "gallery": {
+    "title": "Галерея",
+    "subtitle": "Дизайны от нашего сообщества",
+    "filters": "Фильтры",
+    "sort": "Сортировка",
+    "newest": "Новые",
+    "popular": "Популярные",
+    "myDesigns": "Мои дизайны"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "submit": "Отправить",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "all": "Все",
+    "none": "Нет"
+  },
+  "errors": {
+    "generic": "Произошла ошибка. Попробуйте снова.",
+    "network": "Ошибка сети. Проверьте подключение.",
+    "auth": "Ошибка авторизации",
+    "payment": "Ошибка оплаты",
+    "notFound": "Страница не найдена",
+    "forbidden": "Доступ запрещён"
+  },
+  "footer": {
+    "about": "О сервисе",
+    "privacy": "Политика конфиденциальности",
+    "terms": "Условия использования",
+    "contact": "Контакты",
+    "support": "Поддержка",
+    "copyright": "© {year} RoomGenius AI. Все права защищены."
+  }
+}

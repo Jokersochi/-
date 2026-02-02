@@ -98,9 +98,25 @@ export default async function handler(req, res) {
     });
   }
 
-  const { imageUrl, style, customPrompt } = req.body;
+  const { imageUrl, style, customPrompt, roomType, strength = 0.8 } = req.body;
   const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.modern;
-  const prompt = customPrompt || stylePrompt;
+  
+  // Build comprehensive prompt
+  const roomTypePrompts = {
+    living: "living room, sofa, coffee table, TV area",
+    bedroom: "bedroom, bed, nightstand, wardrobe",
+    kitchen: "kitchen, cabinets, countertop, appliances",
+    bathroom: "bathroom, sink, shower, tiles",
+    office: "home office, desk, chair, bookshelf",
+    kids: "kids room, playful, colorful, safe furniture",
+    dining: "dining room, dining table, chairs",
+    hallway: "hallway, entrance, coat rack, mirror",
+  };
+  
+  const roomContext = roomTypePrompts[roomType] || "";
+  const prompt = customPrompt 
+    ? `${stylePrompt}, ${roomContext}, ${customPrompt}`
+    : `${stylePrompt}, ${roomContext}`;
 
   try {
     console.log(`[Generation] Starting for style: ${style}`);
@@ -110,12 +126,12 @@ export default async function handler(req, res) {
       {
         input: {
           image: imageUrl,
-          prompt: `masterpiece, photorealistic, interior design magazine quality, professional photograph, ${prompt}`,
-          negative_prompt: "ugly, deformed, blurry, watermark, low quality, distorted, amateur, bad lighting, cartoon, illustration, painting",
+          prompt: `masterpiece, photorealistic, interior design magazine quality, professional photograph, award winning design, ${prompt}`,
+          negative_prompt: "ugly, deformed, blurry, watermark, low quality, distorted, amateur, bad lighting, cartoon, illustration, painting, sketch, drawing, unrealistic",
           num_inference_steps: GENERATION_SETTINGS.numInferenceSteps,
           guidance_scale: GENERATION_SETTINGS.guidanceScale,
-          depth_strength: GENERATION_SETTINGS.depthStrength,
-          promax_strength: GENERATION_SETTINGS.promaxStrength,
+          depth_strength: parseFloat(strength) || GENERATION_SETTINGS.depthStrength,
+          promax_strength: parseFloat(strength) || GENERATION_SETTINGS.promaxStrength,
         },
       }
     );

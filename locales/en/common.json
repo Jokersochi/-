@@ -1,0 +1,130 @@
+{
+  "app": {
+    "name": "RoomGenius AI",
+    "tagline": "AI-Powered Interior Design",
+    "description": "Transform your room with AI"
+  },
+  "nav": {
+    "home": "Home",
+    "gallery": "Gallery",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "admin": "Admin Panel",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "orContinueWith": "Or continue with",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "signIn": "Sign In"
+  },
+  "generation": {
+    "title": "Create Design",
+    "uploadPhoto": "Upload room photo",
+    "selectStyle": "Select style",
+    "selectRoomType": "Room type",
+    "customPrompt": "Additional preferences",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "result": "Result",
+    "download": "Download",
+    "share": "Share",
+    "compare": "Compare",
+    "newGeneration": "New generation",
+    "saveToGallery": "Save to gallery"
+  },
+  "styles": {
+    "modern": "Modern",
+    "minimalist": "Minimalist",
+    "scandi": "Scandinavian",
+    "industrial": "Industrial",
+    "bohemian": "Bohemian",
+    "classic": "Classic",
+    "japandi": "Japandi",
+    "loft": "Loft"
+  },
+  "rooms": {
+    "living": "Living Room",
+    "bedroom": "Bedroom",
+    "kitchen": "Kitchen",
+    "bathroom": "Bathroom",
+    "office": "Office",
+    "kids": "Kids Room",
+    "dining": "Dining Room",
+    "hallway": "Hallway"
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose the right plan for you",
+    "free": "Free",
+    "popular": "Popular",
+    "perMonth": "/month",
+    "oneTime": "One-time",
+    "features": "Features",
+    "selectPlan": "Select",
+    "currentPlan": "Current Plan"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "history": "History",
+    "settings": "Settings",
+    "subscription": "Subscription",
+    "referrals": "Referrals",
+    "credits": "Credits",
+    "creditsLeft": "credits left"
+  },
+  "gallery": {
+    "title": "Gallery",
+    "subtitle": "Designs from our community",
+    "filters": "Filters",
+    "sort": "Sort",
+    "newest": "Newest",
+    "popular": "Popular",
+    "myDesigns": "My Designs"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "none": "None"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Network error. Check your connection.",
+    "auth": "Authentication error",
+    "payment": "Payment error",
+    "notFound": "Page not found",
+    "forbidden": "Access denied"
+  },
+  "footer": {
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact",
+    "support": "Support",
+    "copyright": "© {year} RoomGenius AI. All rights reserved."
+  }
+}

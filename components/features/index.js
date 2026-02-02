@@ -6,3 +6,4 @@ export { GenerationResult } from './GenerationResult';
 export { HistoryPanel } from './HistoryPanel';
 export { PaymentModal } from './PaymentModal';
 export { ProgressIndicator } from './ProgressIndicator';
+export { AdvancedOptions } from './AdvancedOptions';
