@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -13,14 +14,14 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (!file) return alert('Пожалуйста, загрузите фото');
     setLoading(true);
     setError(null);
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { data, error: uploadError } = await supabase.storage
         .from('rooms')
         .upload(fileName, file);
@@ -46,7 +47,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [file, style, supabase]);
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
@@ -76,9 +77,19 @@ export default function Home() {
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Генерация...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              Сгенерировать дизайн
+            </>
+          )}
         </button>
 
         {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
