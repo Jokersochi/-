@@ -36,6 +36,8 @@ export default async function handler(req, res) {
 
     res.status(200).json({ output: output[0] });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // SECURITY: Log error server-side and return generic message to prevent leaking sensitive info
+    console.error("Generate API Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
