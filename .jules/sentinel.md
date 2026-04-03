@@ -1,0 +1,4 @@
+## 2025-02-18 - Insecure Randomness in Filenames
+**Vulnerability:** The application used `Math.random()` to generate unique filenames for user-uploaded room photos in `pages/index.js` before saving them to Supabase storage.
+**Learning:** `Math.random()` is not cryptographically secure and produces predictable outputs. This can lead to Insecure Direct Object Reference (IDOR) vulnerabilities, where an attacker could potentially guess file names and access other users' uploaded photos or overwrite them if the storage bucket permissions allow it.
+**Prevention:** Always use a cryptographically secure random number generator, such as `crypto.randomUUID()` in the browser or Node.js `crypto.randomBytes`, for generating unique identifiers, filenames, tokens, or any security-sensitive random values.
