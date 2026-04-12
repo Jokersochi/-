@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { Loader2, X } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -12,6 +13,25 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleGenerate = async () => {
     if (!file) return alert('Пожалуйста, загрузите фото');
@@ -20,7 +40,7 @@ export default function Home() {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { data, error: uploadError } = await supabase.storage
         .from('rooms')
         .upload(fileName, file);
@@ -53,18 +73,35 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
       
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
-        <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
+        <label htmlFor="room-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
+          id="room-upload"
+          ref={fileInputRef}
           type="file" 
+          accept="image/png, image/jpeg, image/webp"
           onChange={(e) => setFile(e.target.files[0])}
-          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" 
+          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         />
 
-        <label className="block text-sm font-medium mb-2">Выберите стиль</label>
+        {previewUrl && (
+          <div className="relative mb-6 rounded-xl overflow-hidden border border-white/20">
+            <img src={previewUrl} alt="Preview" className="w-full h-48 object-cover" />
+            <button
+              onClick={handleRemoveFile}
+              className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 rounded-full text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Удалить фото"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        )}
+
+        <label htmlFor="style-select" className="block text-sm font-medium mb-2">Выберите стиль</label>
         <select 
+          id="style-select"
           value={style} 
           onChange={(e) => setStyle(e.target.value)} 
-          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white"
+          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           <option value="modern">Современный</option>
           <option value="minimalist">Минимализм</option>
@@ -76,9 +113,16 @@ export default function Home() {
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={20} />
+              Генерация...
+            </>
+          ) : (
+            'Сгенерировать дизайн'
+          )}
         </button>
 
         {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
@@ -91,7 +135,7 @@ export default function Home() {
             <img src={result} alt="Generated Design" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex justify-center">
-             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
+             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                Оплатить (Yookassa)
              </button>
           </div>
