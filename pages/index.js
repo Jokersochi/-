@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { Loader2 } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -53,18 +54,21 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
       
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
-        <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
+        <label htmlFor="room-photo" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
+          id="room-photo"
           type="file" 
+          accept="image/png, image/jpeg, image/webp"
           onChange={(e) => setFile(e.target.files[0])}
-          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" 
+          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         />
 
-        <label className="block text-sm font-medium mb-2">Выберите стиль</label>
+        <label htmlFor="style-select" className="block text-sm font-medium mb-2">Выберите стиль</label>
         <select 
+          id="style-select"
           value={style} 
           onChange={(e) => setStyle(e.target.value)} 
-          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white"
+          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black outline-none text-white"
         >
           <option value="modern">Современный</option>
           <option value="minimalist">Минимализм</option>
@@ -76,9 +80,14 @@ export default function Home() {
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black flex items-center justify-center"
         >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Генерация...
+            </>
+          ) : 'Сгенерировать дизайн'}
         </button>
 
         {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
@@ -91,7 +100,7 @@ export default function Home() {
             <img src={result} alt="Generated Design" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex justify-center">
-             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
+             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                Оплатить (Yookassa)
              </button>
           </div>
