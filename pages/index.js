@@ -20,7 +20,7 @@ export default function Home() {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { data, error: uploadError } = await supabase.storage
         .from('rooms')
         .upload(fileName, file);
