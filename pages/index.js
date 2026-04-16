@@ -7,6 +7,21 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [paying, setPaying] = useState(false);
+
+  const handlePay = async () => {
+    setPaying(true);
+    try {
+      const res = await fetch('/api/payment', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      window.location.href = data.confirmationUrl;
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!file) return alert('Пожалуйста, загрузите фото');
@@ -86,8 +101,12 @@ export default function Home() {
             <img src={result} alt="Generated Design" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex justify-center">
-             <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
-               Оплатить (Yookassa)
+             <button
+               onClick={handlePay}
+               disabled={paying}
+               className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition disabled:opacity-50"
+             >
+               {paying ? 'Переход к оплате...' : 'Оплатить — 299 ₽'}
              </button>
           </div>
         </div>
