@@ -1,0 +1,4 @@
+## 2024-04-16 - Insecure Randomness and Error Information Leakage
+**Vulnerability:** Filename generation used `Math.random()`, which produces predictable values and could lead to file collisions or overwrites. The API exposed raw `error.message` strings directly to the client in HTTP 500 responses.
+**Learning:** `Math.random()` should never be used for security-sensitive operations or generating unique identifiers. Internal API error details can expose underlying infrastructure details or API configurations to the client.
+**Prevention:** Always use secure random generators like `crypto.randomUUID()` or `crypto.randomBytes()` for identifiers. Use generic, user-friendly error messages on the frontend and keep detailed error logs on the server using `console.error` or a logging service.

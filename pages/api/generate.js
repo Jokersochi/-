@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ output: output[0] });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Replicate API Error:", error.message);
+    res.status(500).json({ error: "Failed to generate design. Please try again later." });
   }
 }
