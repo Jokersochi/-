@@ -40,7 +40,7 @@ The app is a minimal Next.js Pages Router project with three moving parts:
 
 2. **`pages/api/generate.js`** — Serverless API route. Receives `{ imageUrl, style }`, maps style to a text prompt, and calls the Replicate model `rocketdigitalai/interior-design-sdxl` (pinned version hash). Returns `{ output: url }` on success.
 
-3. **`lib/supabase.js`** — Exports a single shared Supabase client for use across the app (currently only used in `pages/index.js` directly; the file is available but `index.js` also instantiates its own client inline — prefer using the shared client from `lib/supabase.js`).
+3. **`lib/supabase.js`** — Exports a single shared Supabase client. Import from here whenever Supabase is needed.
 
 ## Key Conventions
 
