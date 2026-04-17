@@ -1,0 +1,13 @@
+
+> roomgenius-mvp@1.0.0 dev /app
+> next dev
+
+  ▲ Next.js 15.0.0
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 1606ms
+ ○ Compiling / ...
+ ✓ Compiled / in 3.2s (345 modules)
+ ✓ Compiled in 208ms (345 modules)
+ GET / 200 in 3598ms
