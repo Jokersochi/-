@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [style, setStyle] = useState('modern');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   const handleGenerate = async () => {
     if (!file) return alert('Пожалуйста, загрузите фото');
@@ -48,15 +60,27 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-8">RoomGenius AI</h1>
       
       <div className="bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md border border-white/20">
-        <label className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
+        <label htmlFor="room-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
+          id="room-upload"
           type="file" 
+          accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
-          className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" 
+          className="block w-full text-sm mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         />
 
-        <label className="block text-sm font-medium mb-2">Выберите стиль</label>
+        {previewUrl && (
+          <div className="mb-6 relative group">
+            <p className="text-xs text-gray-400 mb-2">Предпросмотр выбранного фото:</p>
+            <div className="rounded-lg overflow-hidden border border-white/10 aspect-video bg-black/20 flex items-center justify-center">
+              <img src={previewUrl} alt="Room preview" className="max-w-full max-h-full object-contain" />
+            </div>
+          </div>
+        )}
+
+        <label htmlFor="style-select" className="block text-sm font-medium mb-2">Выберите стиль</label>
         <select 
+          id="style-select"
           value={style} 
           onChange={(e) => setStyle(e.target.value)} 
           className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white"
@@ -71,9 +95,16 @@ export default function Home() {
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {loading ? 'Генерация...' : 'Сгенерировать дизайн'}
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Генерация...
+            </>
+          ) : (
+            'Сгенерировать дизайн'
+          )}
         </button>
 
         {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
