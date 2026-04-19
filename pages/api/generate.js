@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ output: output[0] });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Replicate API error:', error);
+    res.status(500).json({ error: 'An error occurred during generation. Please try again later.' });
   }
 }
