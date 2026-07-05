@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -9,6 +9,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [uploadedUrl, setUploadedUrl] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!file) {
@@ -22,28 +24,38 @@ export default function Home() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
-  const handleGenerate = async () => {
-    if (!file) return alert('Пожалуйста, загрузите фото');
+  const handleGenerate = useCallback(async () => {
+    if (!file) {
+      setError('Пожалуйста, загрузите фото');
+      return;
+    }
     setLoading(true);
     setError(null);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from('rooms')
-        .upload(fileName, file);
+      let currentUrl = uploadedUrl;
 
-      if (uploadError) throw uploadError;
+      if (!currentUrl) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const { data, error: uploadError } = await supabase.storage
+          .from('rooms')
+          .upload(fileName, file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('rooms')
-        .getPublicUrl(fileName);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('rooms')
+          .getPublicUrl(fileName);
+
+        currentUrl = publicUrl;
+        setUploadedUrl(currentUrl);
+      }
 
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: publicUrl, style }),
+        body: JSON.stringify({ imageUrl: currentUrl, style }),
       });
 
       const resultData = await res.json();
@@ -55,7 +67,17 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [file, style, uploadedUrl]);
+
+  const handleRemove = useCallback(() => {
+    setFile(null);
+    setUploadedUrl(null);
+    setResult(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
@@ -65,9 +87,14 @@ export default function Home() {
         <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
           id="file-upload"
+          ref={fileInputRef}
           type="file" 
           accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
+          onChange={(e) => {
+            setFile(e.target.files[0]);
+            setUploadedUrl(null);
+            setResult(null);
+          }}
           className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-full"
         />
 
@@ -76,6 +103,13 @@ export default function Home() {
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
             <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                onClick={handleRemove}
+                aria-label="Удалить фото"
+                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}
