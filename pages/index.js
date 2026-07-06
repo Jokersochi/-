@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, X, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -9,6 +9,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!file) {
@@ -23,7 +31,10 @@ export default function Home() {
   }, [file]);
 
   const handleGenerate = async () => {
-    if (!file) return alert('Пожалуйста, загрузите фото');
+    if (!file) {
+      setError('Пожалуйста, загрузите фото');
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -65,6 +76,7 @@ export default function Home() {
         <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
           id="file-upload"
+          ref={fileInputRef}
           type="file" 
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
@@ -74,8 +86,15 @@ export default function Home() {
         {preview && (
           <div className="mb-6">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
-            <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
+            <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative group">
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                onClick={handleRemoveFile}
+                aria-label="Удалить фото"
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-opacity opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white outline-none"
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
         )}
@@ -118,7 +137,15 @@ export default function Home() {
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
             <img src={result} alt="Generated Design" className="w-full h-auto" />
           </div>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center gap-4">
+             <button
+               onClick={() => window.open(result, '_blank')}
+               aria-label="Скачать результат"
+               className="bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-6 rounded-xl transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+             >
+               <Download size={20} />
+               <span>Скачать</span>
+             </button>
              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                Оплатить (Yookassa)
              </button>
