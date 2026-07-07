@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2, X, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -9,6 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!file) {
@@ -22,8 +23,18 @@ export default function Home() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
-  const handleGenerate = async () => {
-    if (!file) return alert('Пожалуйста, загрузите фото');
+  const handleRemoveFile = useCallback(() => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
+  const handleGenerate = useCallback(async () => {
+    if (!file) {
+      setError('Пожалуйста, загрузите фото');
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -55,7 +66,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [file, style]);
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white">
@@ -65,6 +76,7 @@ export default function Home() {
         <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
           id="file-upload"
+          ref={fileInputRef}
           type="file" 
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
@@ -72,10 +84,17 @@ export default function Home() {
         />
 
         {preview && (
-          <div className="mb-6">
+          <div className="mb-6 group relative">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
             <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                onClick={handleRemoveFile}
+                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-opacity opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Удалить фото"
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
         )}
@@ -118,7 +137,15 @@ export default function Home() {
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
             <img src={result} alt="Generated Design" className="w-full h-auto" />
           </div>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center gap-4">
+             <button
+               onClick={() => window.open(result, '_blank')}
+               className="bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-8 rounded-xl transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+               aria-label="Скачать результат"
+             >
+               <Download size={20} />
+               Скачать
+             </button>
              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                Оплатить (Yookassa)
              </button>
