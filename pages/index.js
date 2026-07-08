@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -9,6 +9,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleRemove = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!file) {
@@ -65,6 +73,7 @@ export default function Home() {
         <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Загрузите фото комнаты</label>
         <input 
           id="file-upload"
+          ref={fileInputRef}
           type="file" 
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
@@ -74,8 +83,15 @@ export default function Home() {
         {preview && (
           <div className="mb-6">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
-            <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
+            <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative group">
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                onClick={handleRemove}
+                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:opacity-100 opacity-0 group-hover:opacity-100"
+                aria-label="Удалить фото"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
         )}
