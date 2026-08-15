@@ -15,8 +15,30 @@ const prompts = {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { imageUrl, style } = req.body;
-  const prompt = prompts[style] || prompts.modern;
+  const { imageUrl, style } = req.body || {};
+
+  if (!imageUrl || typeof imageUrl !== "string") {
+    return res.status(400).json({ error: "Invalid image URL" });
+  }
+
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (supabaseUrl) {
+      const expectedHost = new URL(supabaseUrl).hostname;
+      if (parsedUrl.hostname !== expectedHost) {
+        return res.status(403).json({ error: "Unauthorized image source" });
+      }
+    } else if (!parsedUrl.hostname.endsWith(".supabase.co")) {
+      return res.status(403).json({ error: "Unauthorized image source" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "Invalid image URL format" });
+  }
+
+  const safeStyle = typeof style === "string" ? style : "modern";
+  const prompt = Object.prototype.hasOwnProperty.call(prompts, safeStyle) ? prompts[safeStyle] : prompts.modern;
 
   try {
     const output = await replicate.run(
