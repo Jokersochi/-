@@ -131,6 +131,7 @@ export default function Home() {
         <button
           onClick={handleGenerate}
           disabled={loading}
+          aria-busy={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {loading ? (
@@ -143,7 +144,7 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && <p role="alert" className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>
 
       {result && (
