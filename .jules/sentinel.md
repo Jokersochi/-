@@ -1,0 +1,4 @@
+## 2026-08-18 - Fix SSRF and API Quota Drain in External API Wrapper
+**Vulnerability:** The `/api/generate` endpoint passed user-supplied `imageUrl` directly to the Replicate API without validation. This allowed Server-Side Request Forgery (SSRF) and potential arbitrary API quota drain if malicious URLs were used.
+**Learning:** External API wrappers must validate input URLs to ensure they originate from trusted domains (e.g., matching `process.env.NEXT_PUBLIC_SUPABASE_URL` or `*.supabase.co`).
+**Prevention:** Always validate and sanitize user-supplied URLs before passing them to external services. Use URL parsing and domain whitelisting to restrict allowed origins.
