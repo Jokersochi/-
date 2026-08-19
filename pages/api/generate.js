@@ -16,6 +16,23 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { imageUrl, style } = req.body;
+
+  // Security validation: Prevent SSRF by ensuring the imageUrl is from a trusted domain
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isSupabaseUrl = supabaseUrl && parsedUrl.origin === new URL(supabaseUrl).origin;
+    const isSupabaseDomain = parsedUrl.hostname.endsWith('.supabase.co');
+
+    if (!isSupabaseUrl && !isSupabaseDomain) {
+      console.error("SSRF attempt prevented: Invalid image URL domain");
+      return res.status(400).json({ error: "Invalid image URL" });
+    }
+  } catch (error) {
+    console.error("SSRF attempt prevented: Invalid image URL format");
+    return res.status(400).json({ error: "Invalid image URL" });
+  }
+
   const prompt = prompts[style] || prompts.modern;
 
   try {
