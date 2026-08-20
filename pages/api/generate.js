@@ -18,6 +18,28 @@ export default async function handler(req, res) {
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
 
+  // Validate imageUrl to prevent SSRF and arbitrary API quota drain
+  if (!imageUrl) {
+    return res.status(400).json({ error: "Missing image URL" });
+  }
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(imageUrl);
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid image URL format" });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : null;
+  const isTrustedDomain = (supabaseHostname && parsedUrl.hostname === supabaseHostname) ||
+                          parsedUrl.hostname.endsWith('.supabase.co');
+
+  if (!isTrustedDomain) {
+    console.error(`Untrusted URL domain rejected: ${parsedUrl.hostname}`);
+    return res.status(400).json({ error: "Untrusted image URL domain" });
+  }
+
   try {
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
