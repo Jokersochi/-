@@ -1,0 +1,4 @@
+## 2026-08-21 - Fix SSRF via Replicate proxy
+**Vulnerability:** The application was passing an unverified user-provided `imageUrl` directly to the Replicate API in `pages/api/generate.js`. This could allow Server-Side Request Forgery (SSRF) and arbitrary API quota drain if an attacker provides a malicious URL.
+**Learning:** Third-party APIs that accept URLs as inputs act as proxies and will fetch those URLs on your behalf. We must validate that input URLs originate from our trusted storage domains (e.g., Supabase) before passing them on.
+**Prevention:** Always validate external URL inputs against an allowlist of trusted domains (like `process.env.NEXT_PUBLIC_SUPABASE_URL` or `*.supabase.co`) before forwarding them to third-party services.
