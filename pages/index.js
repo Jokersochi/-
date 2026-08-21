@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, X, Download } from 'lucide-react';
+import { Loader2, X, Download, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -131,6 +131,7 @@ export default function Home() {
         <button
           onClick={handleGenerate}
           disabled={loading}
+          aria-busy={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {loading ? (
@@ -139,18 +140,21 @@ export default function Home() {
               <span>Генерация...</span>
             </>
           ) : (
-            'Сгенерировать дизайн'
+            <>
+              <Sparkles className="h-5 w-5" />
+              <span>Сгенерировать дизайн</span>
+            </>
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && <p role="alert" className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>
 
       {result && (
         <div className="mt-12 w-full max-w-4xl">
           <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
+            <img src={result} alt="Сгенерированный дизайн комнаты" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <button
