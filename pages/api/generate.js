@@ -18,6 +18,30 @@ export default async function handler(req, res) {
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
 
+  if (!imageUrl) {
+    return res.status(400).json({ error: "Missing imageUrl" });
+  }
+
+  let supabaseDomain = null;
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      supabaseDomain = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname;
+    }
+  } catch (envError) {
+    console.error("Invalid NEXT_PUBLIC_SUPABASE_URL configuration", envError);
+  }
+
+  try {
+    // Security Fix: Prevent SSRF and arbitrary API quota drain
+    // Validate that the image URL originates from our trusted Supabase storage domains
+    const url = new URL(imageUrl);
+    if (!url.hostname.endsWith(".supabase.co") && (!supabaseDomain || url.hostname !== supabaseDomain)) {
+       return res.status(400).json({ error: "Invalid imageUrl domain" });
+    }
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid imageUrl format" });
+  }
+
   try {
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
