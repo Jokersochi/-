@@ -16,6 +16,31 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { imageUrl, style } = req.body;
+
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const trustedUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isSupabaseCo = parsedUrl.hostname.endsWith('.supabase.co');
+
+    let isTrustedDomain = isSupabaseCo;
+    if (trustedUrl) {
+      try {
+        const parsedTrustedUrl = new URL(trustedUrl);
+        if (parsedUrl.hostname === parsedTrustedUrl.hostname) {
+          isTrustedDomain = true;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (!isTrustedDomain) {
+      return res.status(400).json({ error: "Invalid image URL" });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: "Invalid image URL format" });
+  }
+
   const prompt = prompts[style] || prompts.modern;
 
   try {
