@@ -102,10 +102,11 @@ export default function Home() {
           <div className="mb-6">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
             <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
-              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={preview} alt="Предпросмотр фото комнаты" className="w-full h-full object-cover" />
               <button
                 onClick={handleRemove}
                 aria-label="Удалить фото"
+                title="Удалить фото"
                 className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 <X className="h-4 w-4" />
@@ -143,14 +144,18 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && (
+          <p role="alert" aria-live="polite" className="mt-4 text-red-400 text-sm">
+            {error}
+          </p>
+        )}
       </div>
 
       {result && (
         <div className="mt-12 w-full max-w-4xl">
           <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
+            <img src={result} alt="Сгенерированный дизайн комнаты" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <button
