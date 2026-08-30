@@ -18,6 +18,19 @@ export default async function handler(req, res) {
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
 
+  // SSRF Protection: Validate the input URL
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(imageUrl);
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid URL format" });
+  }
+
+  const trustedHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : null;
+  if (!parsedUrl.hostname.endsWith(".supabase.co") && parsedUrl.hostname !== trustedHost) {
+    return res.status(403).json({ error: "Untrusted URL domain" });
+  }
+
   try {
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
