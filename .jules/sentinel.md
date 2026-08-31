@@ -1,0 +1,4 @@
+## 2024-08-31 - Fix SSRF Vulnerability in AI Generation Endpoint
+**Vulnerability:** The /api/generate endpoint accepted arbitrary `imageUrl` parameters without validation, allowing Server-Side Request Forgery (SSRF) and potential quota drain by forcing the Replicate API to fetch from untrusted domains.
+**Learning:** Client-provided URLs must always be validated against an allowlist of trusted domains (like Supabase storage) before being passed to external services.
+**Prevention:** Always parse URLs using the `URL` constructor (wrapped in `try/catch`) and verify the origin or hostname against expected values before using them in server-side requests.
