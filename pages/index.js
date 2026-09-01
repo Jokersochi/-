@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, X, Download } from 'lucide-react';
+import { Loader2, X, Download, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -102,7 +102,7 @@ export default function Home() {
           <div className="mb-6">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
             <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
-              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={preview} alt="Предпросмотр загруженного фото" className="w-full h-full object-cover" />
               <button
                 onClick={handleRemove}
                 aria-label="Удалить фото"
@@ -143,14 +143,14 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && <p role="alert" aria-live="polite" className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>
 
       {result && (
         <div className="mt-12 w-full max-w-4xl">
           <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
+            <img src={result} alt="Сгенерированный дизайн комнаты" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <button
@@ -161,7 +161,8 @@ export default function Home() {
               <Download className="h-5 w-5" />
               Скачать
             </button>
-            <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+            <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+              <CreditCard className="h-5 w-5" />
               Оплатить (Yookassa)
             </button>
           </div>
