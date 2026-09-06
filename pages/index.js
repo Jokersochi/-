@@ -102,7 +102,7 @@ export default function Home() {
           <div className="mb-6">
             <p className="text-xs text-gray-400 mb-2">Предпросмотр:</p>
             <div className="rounded-lg overflow-hidden border border-white/10 aspect-video relative">
-              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={preview} alt="Предпросмотр загруженного фото" className="w-full h-full object-cover" />
               <button
                 onClick={handleRemove}
                 aria-label="Удалить фото"
@@ -119,7 +119,7 @@ export default function Home() {
           id="style-select"
           value={style}
           onChange={(e) => setStyle(e.target.value)}
-          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none text-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="block w-full p-3 bg-gray-900 border border-white/20 rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none text-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           <option value="modern">Современный</option>
           <option value="minimalist">Минимализм</option>
@@ -131,6 +131,7 @@ export default function Home() {
         <button
           onClick={handleGenerate}
           disabled={loading}
+          aria-busy={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {loading ? (
@@ -143,14 +144,14 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && <p role="alert" aria-live="polite" className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>
 
       {result && (
         <div className="mt-12 w-full max-w-4xl">
           <h2 className="text-2xl font-bold mb-4 text-center">Результат:</h2>
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <img src={result} alt="Generated Design" className="w-full h-auto" />
+            <img src={result} alt="Сгенерированный дизайн интерьера" className="w-full h-auto" />
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <button
