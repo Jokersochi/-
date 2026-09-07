@@ -1,0 +1,4 @@
+## 2024-09-07 - Fix SSRF Vulnerability in API generate endpoint
+**Vulnerability:** The /api/generate endpoint passed user-supplied image URLs directly to the Replicate API without validation, creating a Server-Side Request Forgery (SSRF) and arbitrary API quota drain risk.
+**Learning:** External API wrappers must validate input URLs to ensure they originate from trusted domains (like Supabase) before passing them on to prevent SSRF. Using `new URL()` inside a `try...catch` block is necessary to handle malformed URLs gracefully.
+**Prevention:** Always validate client-supplied URLs against an allowlist of trusted domains (e.g., `NEXT_PUBLIC_SUPABASE_URL` or `*.supabase.co`) before passing them to external services.
