@@ -143,7 +143,7 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && <p role="alert" aria-live="polite" className="mt-4 text-red-400 text-sm">{error}</p>}
       </div>
 
       {result && (
