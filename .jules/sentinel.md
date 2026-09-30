@@ -1,0 +1,4 @@
+## 2024-09-30 - SSRF Vulnerability in Image Generation API
+**Vulnerability:** The `/api/generate` endpoint accepted arbitrary `imageUrl` parameters without domain validation, leading to potential Server-Side Request Forgery (SSRF) and API quota drain.
+**Learning:** Next.js API routes that proxy requests to external APIs (like Replicate) must strictly validate user-provided URLs to ensure they only point to trusted storage (like Supabase). Unvalidated URLs can be abused by attackers to fetch internal resources or drain paid API quotas.
+**Prevention:** Always parse user-provided URLs using the `URL` constructor inside a `try...catch` block (returning 400 on malformed input) and validate the `hostname` against trusted domains (e.g., `*.supabase.co` or environment variables like `NEXT_PUBLIC_SUPABASE_URL`) before passing them to external services.
