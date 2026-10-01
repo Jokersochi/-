@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, X, Download } from 'lucide-react';
+import { Loader2, X, Download, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -139,11 +139,18 @@ export default function Home() {
               <span>Генерация...</span>
             </>
           ) : (
-            'Сгенерировать дизайн'
+            <>
+              <Sparkles className="h-5 w-5" />
+              <span>Сгенерировать дизайн</span>
+            </>
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && (
+          <p role="alert" aria-live="assertive" className="mt-4 text-red-400 text-sm">
+            {error}
+          </p>
+        )}
       </div>
 
       {result && (
