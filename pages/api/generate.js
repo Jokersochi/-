@@ -12,11 +12,23 @@ const prompts = {
   bohemian: "Bohemian interior, vibrant colors, eclectic decor, many plants, artistic atmosphere.",
 };
 
+// Use global to persist cache across API route hot-reloads in development
+if (!global.generateCache) {
+  global.generateCache = new Map();
+}
+const cache = global.generateCache;
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
+
+  const cacheKey = `${imageUrl}-${style}`;
+  if (cache.has(cacheKey)) {
+    console.log(`[Cache Hit] key: ${cacheKey}`);
+    return res.status(200).json({ output: cache.get(cacheKey) });
+  }
 
   try {
     const output = await replicate.run(
@@ -34,7 +46,10 @@ export default async function handler(req, res) {
       }
     );
 
-    res.status(200).json({ output: output[0] });
+    const resultUrl = output[0];
+    cache.set(cacheKey, resultUrl);
+
+    res.status(200).json({ output: resultUrl });
   } catch (error) {
     console.error("Error in /api/generate:", error);
     res.status(500).json({ error: "Internal Server Error" });
