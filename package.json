@@ -9,17 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "autoprefixer": "10.4.16",
+    "clsx": "latest",
+    "lucide-react": "latest",
     "next": "15.0.0",
+    "postcss": "8.4.31",
     "react": "18.x",
     "react-dom": "18.x",
-    "@supabase/supabase-js": "latest",
-    "lucide-react": "latest",
-    "tailwindcss": "3.4.1",
-    "postcss": "8.4.31",
-    "autoprefixer": "10.4.16",
     "replicate": "latest",
-    "axios": "latest",
-    "clsx": "latest",
-    "tailwind-merge": "latest"
+    "tailwindcss": "3.4.1"
   }
 }
