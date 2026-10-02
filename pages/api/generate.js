@@ -18,6 +18,39 @@ export default async function handler(req, res) {
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
 
+  // SECURITY: Validate imageUrl domain to prevent SSRF
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return res.status(400).json({ error: "Invalid image URL" });
+  }
+
+  try {
+    const parsedUrl = new URL(imageUrl);
+    let isAllowed = false;
+
+    // Check if domain is allowed (*.supabase.co or specific NEXT_PUBLIC_SUPABASE_URL)
+    if (parsedUrl.hostname.endsWith('.supabase.co')) {
+      isAllowed = true;
+    } else {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if (supabaseUrl) {
+          const parsedSupabaseUrl = new URL(supabaseUrl);
+          if (parsedUrl.hostname === parsedSupabaseUrl.hostname) {
+            isAllowed = true;
+          }
+        }
+      } catch (envUrlError) {
+        // Ignore parsing errors for environment variable
+      }
+    }
+
+    if (!isAllowed) {
+      return res.status(400).json({ error: "Image URL domain not allowed" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "Malformed image URL" });
+  }
+
   try {
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
