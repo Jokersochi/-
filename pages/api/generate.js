@@ -16,6 +16,25 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { imageUrl, style } = req.body;
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+
+  let parsedImageUrl;
+  try {
+    parsedImageUrl = new URL(imageUrl);
+  } catch (error) {
+    return res.status(400).json({ error: "Bad Request: Invalid Image URL" });
+  }
+
+  const trustedUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+  // SECURITY: Validate imageUrl domain to prevent SSRF
+  if (parsedImageUrl.hostname !== trustedUrl.hostname) {
+    return res.status(400).json({ error: "Bad Request: Untrusted Image Source" });
+  }
+
   const prompt = prompts[style] || prompts.modern;
 
   try {

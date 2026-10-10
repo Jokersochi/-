@@ -1,0 +1,4 @@
+## 2024-10-10 - SSRF and API Quota Drain via Unvalidated External Image URLs
+**Vulnerability:** The API route accepted arbitrary URLs from the client and passed them directly to a third-party service (Replicate), allowing potential Server-Side Request Forgery (SSRF) and API quota exhaustion.
+**Learning:** External API wrappers must strictly validate client-supplied URLs to ensure they originate from trusted domains (e.g., the application's own Supabase storage) before processing.
+**Prevention:** Always parse and validate input URLs against explicitly trusted environment variables, avoiding wildcard subdomain checks which can be bypassed.
