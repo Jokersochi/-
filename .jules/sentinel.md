@@ -1,0 +1,4 @@
+## 2025-02-14 - SSRF via Replicate imageUrl
+**Vulnerability:** The `/api/generate` route passes user-supplied `imageUrl` directly to the Replicate API without domain validation, creating a Server-Side Request Forgery vector.
+**Learning:** External API wrappers can be used as SSRF vectors if they fetch from arbitrary URLs supplied by the client. Wildcard domain checks are insufficient due to shared SaaS instances.
+**Prevention:** Always parse URLs using the `URL` constructor inside a `try...catch` block (returning 400 on error) and strictly validate the hostname against trusted environment variables (e.g., `process.env.NEXT_PUBLIC_SUPABASE_URL`), checking for environment variable existence first.
