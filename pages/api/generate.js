@@ -15,8 +15,24 @@ const prompts = {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
+
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const expectedOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin;
+
+    // SECURITY: Validate imageUrl domain to prevent SSRF
+    if (parsedUrl.origin !== expectedOrigin) {
+      return res.status(400).json({ error: "Bad Request" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "Bad Request" });
+  }
 
   try {
     const output = await replicate.run(
