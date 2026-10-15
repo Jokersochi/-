@@ -1,0 +1,4 @@
+## 2024-05-23 - SSRF and API Quota Drain in Replicate Wrapper
+**Vulnerability:** The `/api/generate` endpoint passed unvalidated client-supplied URLs directly to the Replicate API, allowing SSRF via Replicate's servers and draining API quota.
+**Learning:** External API wrappers can be used as proxies for attacks or quota consumption if input URLs are not verified against trusted sources. Wildcard validation is insufficient for shared SaaS instances.
+**Prevention:** Always parse and strictly validate client-supplied URLs using the `URL` constructor inside a `try...catch` block, ensuring the hostname exactly matches a trusted environment variable (like `NEXT_PUBLIC_SUPABASE_URL`) after verifying the environment variable exists.
