@@ -1,0 +1,4 @@
+## 2023-10-19 - SSRF Vulnerability in Replicate Image URL Input
+**Vulnerability:** The `/api/generate` endpoint passed a client-controlled `imageUrl` directly to the Replicate API without validation, creating a Server-Side Request Forgery (SSRF) risk.
+**Learning:** Cloud functions that proxy URLs to third-party services like Replicate must strictly validate the domain of the URL to ensure it originates from the expected trusted storage rather than allowing arbitrary URLs, which can be bypassed if only wildcard checks are used.
+**Prevention:** Always parse client-supplied URLs using the `URL` constructor within a `try...catch` block (returning a 400 error on failure) and verify that the URL's origin strictly matches the configured trusted domain environment variable. Check that the environment variable exists before parsing to avoid 500 errors masking as 400 errors.
