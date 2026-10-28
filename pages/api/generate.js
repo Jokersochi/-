@@ -18,6 +18,21 @@ export default async function handler(req, res) {
   const { imageUrl, style } = req.body;
   const prompt = prompts[style] || prompts.modern;
 
+  // SECURITY: Validate imageUrl domain to prevent SSRF
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+
+  try {
+    const inputUrlObj = new URL(imageUrl);
+    const trustedUrlObj = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    if (inputUrlObj.hostname !== trustedUrlObj.hostname) {
+      return res.status(400).json({ error: "Bad Request" });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: "Bad Request" });
+  }
+
   try {
     const output = await replicate.run(
       "rocketdigitalai/interior-design-sdxl:a3c091059a25590ce2d5ea13651fab63f447f21760e50c358d4b850e844f6f87",
