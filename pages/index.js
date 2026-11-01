@@ -90,10 +90,13 @@ export default function Home() {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          aria-invalid={error ? 'true' : 'false'}
+          aria-describedby={error ? 'file-upload-error' : undefined}
           onChange={(e) => {
             setFile(e.target.files[0]);
             setUploadedUrl(null);
             setResult(null);
+            if (error) setError(null);
           }}
           className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-full"
         />
@@ -131,6 +134,7 @@ export default function Home() {
         <button
           onClick={handleGenerate}
           disabled={loading}
+          aria-busy={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {loading ? (
@@ -143,7 +147,11 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && (
+          <p id="file-upload-error" role="alert" aria-live="assertive" className="mt-4 text-red-400 text-sm">
+            {error}
+          </p>
+        )}
       </div>
 
       {result && (
