@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, X, Download } from 'lucide-react';
+import { Loader2, X, Download, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -143,7 +143,16 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm flex items-center gap-2.5"
+          >
+            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
 
       {result && (
