@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, X, Download } from 'lucide-react';
+import { Loader2, X, Download, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -90,10 +90,13 @@ export default function Home() {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          aria-describedby={error ? "error-message" : undefined}
+          aria-invalid={!!error}
           onChange={(e) => {
             setFile(e.target.files[0]);
             setUploadedUrl(null);
             setResult(null);
+            setError(null);
           }}
           className="block w-full text-sm mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-full"
         />
@@ -143,7 +146,17 @@ export default function Home() {
           )}
         </button>
 
-        {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
+        {error && (
+          <div
+            id="error-message"
+            role="alert"
+            aria-live="assertive"
+            className="mt-4 p-3 bg-red-950/60 border border-red-500/50 rounded-xl flex items-center gap-2.5 text-red-200 text-sm"
+          >
+            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
 
       {result && (
