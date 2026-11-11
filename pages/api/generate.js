@@ -15,7 +15,27 @@ const prompts = {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+
   const { imageUrl, style } = req.body;
+
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return res.status(400).json({ error: "Bad Request" });
+  }
+
+  try {
+    const parsedInputUrl = new URL(imageUrl);
+    const expectedBaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    // SECURITY: Validate imageUrl domain to prevent SSRF
+    if (parsedInputUrl.hostname !== expectedBaseUrl.hostname) {
+      return res.status(400).json({ error: "Bad Request" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "Bad Request" });
+  }
+
   const prompt = prompts[style] || prompts.modern;
 
   try {
